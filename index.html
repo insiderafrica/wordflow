@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+  <meta name="theme-color" content="#121213">
+  <title>WordFlow - Insider Africa</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="container">
+    <div id="left-panel">
+      <h2>User Tools</h2>
+      <div id="controls">
+        <button id="colorblind-toggle"><b>Color Mode</b></button>
+        <button id="hint-button"><b>Smart Hint</b></button>
+        <button id="reset-button"><b>New Game</b></button>
+        <button id="reset-stats"><b>Reset Stats</b></button>
+      </div>
+      <div id="stats">
+        <h2>Player Stats</h2>
+        <p>Played: <span id="games-played">0</span></p>
+        <p>Won: <span id="games-won">0</span></p>
+        <p>Streak: <span id="current-streak">0</span></p>
+        <p>Max Streak: <span id="max-streak">0</span></p>
+      </div>
+      <div id="previous-answer">
+        <h3>Yesterday's Answer</h3>
+        <div id="yesterdays-word">Loading...</div>
+      </div>
+    </div>
+
+    <div id="game-panel">
+      <h1>WORDFLOW</h1>
+      <div id="start-screen">
+        <h2>WordFlow Challenge</h2>
+        <button id="start-btn"><b>START GAME</b></button>
+      </div>
+      <div id="hint-container" class="hidden">
+        <div class="hint-popup">
+          <h3>Smart Hint</h3>
+          <p>Try using the letter: <span id="hint-letter"></span></p>
+          <button id="close-hint">Got it!</button>
+        </div>
+      </div>
+      <div id="board"></div>
+      <div id="keyboard"></div>
+      <div id="daily-complete-banner" class="hidden">
+        <h2>🎉 Congratulations! 🎉</h2>
+        <p>You've solved today's WordFlow!</p>
+        <p>Come back tomorrow for a new challenge!</p>
+      </div>
+    </div>
+
+    <div id="right-panel">
+      <h2>How to Play</h2>
+      <p>Guess the 5-letter word in 6 tries.</p>
+      <ul>
+        <li>🟩 Correct letter & position</li>
+        <li>🟨 Correct letter, wrong position</li>
+        <li>⬛ Letter not in word</li>
+      </ul>
+
+      <div class="shortcuts-info">
+        <h3>Quick Shortcuts</h3>
+        <ul>
+          <li><b>Color Mode:</b> Ctrl+Shift+C</li>
+          <li><b>Smart Hint:</b> Ctrl+Shift+H</li>
+          <li><b>New Game:</b> Ctrl+Shift+N</li>
+          <li><b>Reset Stats:</b> Ctrl+Shift+R</li>
+        </ul>
+      </div>
+      
+      <div class="game-history">
+        <h3>About WordFlow</h3>
+        <p>Created by Insider Africa, <b><u>Wordflow</u></b> is a clean, intuitive, and intellectually stimulating daily word puzzle designed to sharpen your mind one guess at a time. </p>
+        <p>Each day presents a new five-letter challenge that tests your vocabulary, logic, and pattern recognition in just a few minutes of focused play.</p>
+        <p>Whether you're a casual word enthusiast or a competitive puzzle solver, <b>WordFlow</b> offers a satisfying blend of simplicity and depth—making it a perfect daily ritual.</p>
+      </div>
+      
+      <div class="colorblind-instructions" hidden>
+        <h3>Colorblind Mode</h3>
+        <ul>
+          <li>🔵 Correct position</li>
+          <li>🟠 Correct letter</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
