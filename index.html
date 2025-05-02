@@ -31,6 +31,54 @@
       <div id="previous-answer">
         <h3>Yesterday's Answer</h3>
         <div id="yesterdays-word">Loading...</div>
+        <div id="points-system">
+          <h3>Points: <span id="user-points">0</span></h3>
+          <button id="redeem-tries" class="redeem-btn" disabled>Redeem 10 points for extra tries</button>
+          <button id="redeem-streak" class="redeem-btn" disabled>Redeem 20 points to save streak</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-menu-btn">☰ Menu</div>
+    <div id="mobile-menu" class="hidden">
+      <button id="close-menu-btn">✕</button>
+      
+      <div class="menu-section">
+        <h3>Game Tools</h3>
+        <button id="mobile-colorblind">Color Mode</button>
+        <button id="mobile-hint">Smart Hint</button>
+        <button id="mobile-reset">New Game</button>
+        <button id="mobile-reset-stats">Reset Stats</button>
+      </div>
+
+      <div class="menu-section">
+        <h3>Stats</h3>
+        <div class="mobile-stats">
+          <p>Played: <span id="mobile-games-played">0</span></p>
+          <p>Won: <span id="mobile-games-won">0</span></p>
+          <p>Streak: <span id="mobile-streak">0</span></p>
+          <p>Max Streak: <span id="mobile-max-streak">0</span></p>
+        </div>
+      </div>
+
+      <div class="menu-section">
+        <h3>Yesterday's Answer</h3>
+        <div id="mobile-yesterdays-word">-</div>
+        <div id="mobile-points-system">
+          <h3>Points: <span id="mobile-user-points">0</span></h3>
+          <button id="mobile-redeem-tries" class="redeem-btn" disabled>Redeem 10 points for extra tries</button>
+          <button id="mobile-redeem-streak" class="redeem-btn" disabled>Redeem 20 points to save streak</button>
+        </div>
+      </div>
+
+      <div class="menu-section">
+        <h3>How to Play</h3>
+        <p>Guess the 5-letter word in 6 tries.</p>
+        <ul>
+          <li>🟩 Correct letter & position</li>
+          <li>🟨 Correct letter, wrong position</li>
+          <li>⬛ Letter not in word</li>
+        </ul>
       </div>
     </div>
 
@@ -53,6 +101,16 @@
         <h2>🎉 Congratulations! 🎉</h2>
         <p>You've solved today's WordFlow!</p>
         <p>Come back tomorrow for a new challenge!</p>
+      </div>
+      <div id="game-over-banner" class="hidden">
+        <h2>Game Over</h2>
+        <p>The word was: <span id="correct-word"></span></p>
+        <div id="redeem-options" class="hidden">
+          <p>Would you like to redeem points?</p>
+          <button id="redeem-tries-banner">10 points for extra tries</button>
+          <button id="redeem-streak-banner">20 points to save streak</button>
+          <button id="decline-redeem">No thanks</button>
+        </div>
       </div>
     </div>
 

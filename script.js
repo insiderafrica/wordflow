@@ -11,12 +11,15 @@ const stats = JSON.parse(localStorage.getItem("wordleStats")) || {
   gamesPlayed: 0, 
   gamesWon: 0,
   currentStreak: 0,
-  maxStreak: 0
+  maxStreak: 0,
+  points: 0,
+  lastPlayedDate: null
 };
 
-// Settings - only colorblind mode remains
+// Settings
 const settings = JSON.parse(localStorage.getItem("wordleSettings")) || {
-  colorblind: false
+  colorblind: false,
+  difficulty: "medium" // easy, medium, hard
 };
 
 // Initialize game when DOM is loaded
@@ -44,15 +47,26 @@ function initGame() {
   const gameState = JSON.parse(localStorage.getItem("wordleGameState")) || {};
   hasWonToday = gameState.lastWinDate === today;
   
+  // Reset streak if not played yesterday
+  if (stats.lastPlayedDate && stats.lastPlayedDate !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (stats.lastPlayedDate !== yesterday.toDateString()) {
+      stats.currentStreak = 0;
+      saveStats();
+    }
+  }
+  
   if (hasWonToday) {
     showDailyCompleteBanner();
     disableGameInput();
     showPreviousAnswer();
   }
 
-  // Select a random word based on daily seed
+  // Select a random word based on daily seed and difficulty
   const dailySeed = Math.floor(Date.now() / 86400000);
-  secretWord = WORDS[dailySeed % WORDS.length];
+  const filteredWords = filterWordsByDifficulty(WORDS, settings.difficulty);
+  secretWord = filteredWords[dailySeed % filteredWords.length];
   
   if(settings.colorblind) document.body.classList.add("colorblind");
   
@@ -60,19 +74,42 @@ function initGame() {
   initKeyboard();
   initEventListeners();
   updateStatsDisplay();
+  updatePointsDisplay();
+}
+
+// Filter words by difficulty
+function filterWordsByDifficulty(words, difficulty) {
+  // Simple difficulty ranking based on word characteristics
+  return words.filter(word => {
+    const uniqueLetters = new Set(word.split('')).size;
+    const commonLetters = word.split('').filter(c => 
+      ['a','e','i','o','u','r','s','t','l','n'].includes(c)).length;
+    
+    switch(difficulty) {
+      case "easy":
+        return uniqueLetters >= 4 && commonLetters >= 3;
+      case "hard":
+        return uniqueLetters <= 3 || commonLetters <= 2;
+      default: // medium
+        return true;
+    }
+  });
 }
 
 // New function to display yesterday's word
 function showPreviousAnswer() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const dailySeed = Math.floor(yesterday / 86400000);
-    const yesterdaysWord = WORDS[dailySeed % WORDS.length];
-    
-    document.getElementById('yesterdays-word').textContent = 
-      yesterdaysWord.toUpperCase();
-  }
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dailySeed = Math.floor(yesterday / 86400000);
+  const filteredWords = filterWordsByDifficulty(WORDS, settings.difficulty);
+  const yesterdaysWord = filteredWords[dailySeed % filteredWords.length];
   
+  document.getElementById('yesterdays-word').textContent = 
+    yesterdaysWord.toUpperCase();
+    
+  document.getElementById('mobile-yesterdays-word').textContent = 
+    yesterdaysWord.toUpperCase();
+}
 
 // Create game board
 function initBoard() {
@@ -139,41 +176,66 @@ function initEventListeners() {
     initGame();
   });
 
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.shiftKey && !hasWonToday) {
-          switch (e.key.toLowerCase()) {
-            case 'c':
-                e.preventDefault();
-                showShortcutTooltip('colorblind-toggle');
-                document.getElementById('colorblind-toggle').click();
-                break;
-            case 'h':
-              e.preventDefault();
-              document.getElementById('hint-button').click();
-              break;
-            case 'n':
-              e.preventDefault();
-              document.getElementById('reset-button').click();
-              break;
-            case 'r':
-              e.preventDefault();
-              document.getElementById('reset-stats').click();
-              break;
-          }
-        }
-      });
+  // Add keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && !hasWonToday) {
+      switch (e.key.toLowerCase()) {
+        case 'c':
+          e.preventDefault();
+          showShortcutTooltip('colorblind-toggle');
+          document.getElementById('colorblind-toggle').click();
+          break;
+        case 'h':
+          e.preventDefault();
+          document.getElementById('hint-button').click();
+          break;
+        case 'n':
+          e.preventDefault();
+          document.getElementById('reset-button').click();
+          break;
+        case 'r':
+          e.preventDefault();
+          document.getElementById('reset-stats').click();
+          break;
+      }
+    }
+  });
+
+  // Mobile menu toggle
+  document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+    document.getElementById('mobile-menu').classList.add('show');
+  });
+  
+  document.getElementById('close-menu-btn').addEventListener('click', () => {
+    document.getElementById('mobile-menu').classList.remove('show');
+  });
+
+  // Mobile button functionality
+  document.getElementById('mobile-colorblind').addEventListener('click', toggleColorblind);
+  document.getElementById('mobile-hint').addEventListener('click', giveSmartHint);
+  document.getElementById('mobile-reset').addEventListener('click', () => location.reload());
+  document.getElementById('mobile-reset-stats').addEventListener('click', resetStats);
+  
+  // Redeem buttons
+  document.getElementById('redeem-tries').addEventListener('click', () => redeemPoints(10, 'tries'));
+  document.getElementById('redeem-streak').addEventListener('click', () => redeemPoints(20, 'streak'));
+  document.getElementById('mobile-redeem-tries').addEventListener('click', () => redeemPoints(10, 'tries'));
+  document.getElementById('mobile-redeem-streak').addEventListener('click', () => redeemPoints(20, 'streak'));
+  document.getElementById('redeem-tries-banner').addEventListener('click', () => redeemPoints(10, 'tries'));
+  document.getElementById('redeem-streak-banner').addEventListener('click', () => redeemPoints(20, 'streak'));
+  document.getElementById('decline-redeem').addEventListener('click', () => {
+    document.getElementById('game-over-banner').classList.add('hidden');
+  });
 }
 
-// Add to script.js
 function showShortcutTooltip(buttonId) {
-    const btn = document.getElementById(buttonId);
-    const originalText = btn.textContent;
-    btn.textContent = '✓ Activated!';
-    setTimeout(() => {
-      btn.textContent = originalText;
-    }, 1000);
-  }
+  const btn = document.getElementById(buttonId);
+  const originalText = btn.textContent;
+  btn.textContent = '✓ Activated!';
+  setTimeout(() => {
+    btn.textContent = originalText;
+  }, 1000);
+}
 
 // Handle physical keyboard input
 function handlePhysicalKeyboardInput(e) {
@@ -205,7 +267,11 @@ function handleKeyPress(key) {
       break;
     default:
       if(currentGuess.length < 5 && /^[a-zA-Z]$/.test(key)) {
-        currentGuess += normalizedKey;
+        // Check if key is disabled (absent)
+        const keyElement = document.querySelector(`[data-key="${key}"]`);
+        if (!keyElement || !keyElement.classList.contains('absent')) {
+          currentGuess += normalizedKey;
+        }
       }
   }
   updateBoard();
@@ -213,7 +279,7 @@ function handleKeyPress(key) {
 
 // Process submitted guess
 function submitGuess() {
-  if(currentGuess.length < 5) return alert("Not enough letters!");
+  if(currentGuess.length < 5) return showNotification("Not enough letters!");
   const normalizedGuess = currentGuess.toLowerCase().trim();
   
   if(!WORDS.includes(normalizedGuess)) {
@@ -253,6 +319,9 @@ function submitGuess() {
     }
   });
 
+  // Update keyboard with the guess and feedback
+  updateKeyboard(guessArray, feedback);
+
   if(currentGuess === secretWord) {
     handleWin();
   } else if(++currentRow === maxRows) {
@@ -260,7 +329,6 @@ function submitGuess() {
   }
 
   currentGuess = "";
-  updateKeyboard(feedback);
 }
 
 // Update board display
@@ -274,11 +342,24 @@ function updateBoard() {
 }
 
 // Update keyboard colors based on guesses
-function updateKeyboard(feedback) {
-  currentGuess.split("").forEach((letter, i) => {
+function updateKeyboard(guessArray, feedback) {
+  guessArray.forEach((letter, i) => {
     const key = document.querySelector(`[data-key="${letter.toUpperCase()}"]`);
-    if(key && !key.classList.contains("correct")) {
-      key.classList.add(feedback[i]);
+    if (key) {
+      // Remove existing classes to prevent conflicts
+      key.classList.remove("correct", "present", "absent");
+      
+      // Add the appropriate class based on feedback
+      if (feedback[i] === "correct") {
+        key.classList.add("correct");
+      } else if (feedback[i] === "present") {
+        // Only mark as present if not already correct
+        if (!key.classList.contains("correct")) {
+          key.classList.add("present");
+        }
+      } else if (feedback[i] === "absent") {
+        key.classList.add("absent");
+      }
     }
   });
 }
@@ -300,8 +381,8 @@ function handleWin() {
   
   setTimeout(() => {
     stats.gamesWon++;
-    stats.currentStreak++;
     if(stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+    stats.lastPlayedDate = today;
     
     // Save win state
     const gameState = {
@@ -318,9 +399,39 @@ function handleWin() {
 
 // Handle losing the game
 function handleLoss() {
-  alert(`😢 Game Over! The word was ${secretWord.toUpperCase()}`);
+  // Show the correct letters on the board
+  for (let i = 0; i < 5; i++) {
+    const cell = document.getElementById(`cell-${currentRow * 5 + i}`);
+    if (cell) {
+      cell.textContent = secretWord[i].toUpperCase();
+      cell.classList.add("correct");
+    }
+  }
+
   stats.currentStreak = 0;
+  stats.lastPlayedDate = today;
+  
+  // Show redeem options if player has enough points
+  document.getElementById('correct-word').textContent = secretWord.toUpperCase();
+  document.getElementById('redeem-options').classList.remove('hidden');
+  document.getElementById('redeem-tries-banner').disabled = stats.points < 10;
+  document.getElementById('redeem-streak-banner').disabled = stats.points < 20;
+  document.getElementById('game-over-banner').classList.remove('hidden');
+  
   endGame();
+}
+
+// Show notification (onsite)
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.classList.add('fade-out');
+    setTimeout(() => notification.remove(), 500);
+  }, 2000);
 }
 
 // Show invalid guess animation
@@ -332,7 +443,7 @@ function invalidGuess(message = "Not in word list") {
     board.classList.add("shake");
     setTimeout(() => {
       board.classList.remove("shake");
-      alert(message);
+      showNotification(message);
     }, 500);
   }
 }
@@ -348,28 +459,28 @@ function toggleColorblind() {
 
 // Provide a hint to the player
 function giveSmartHint() {
-    const unusedLetters = secretWord.split("").filter(l => !currentGuess.includes(l));
-    const hint = unusedLetters[Math.floor(Math.random() * unusedLetters.length)] || secretWord[0];
-    
-    // Show the hint popup
-    const hintContainer = document.getElementById("hint-container");
-    const hintLetter = document.getElementById("hint-letter");
-    
-    hintLetter.textContent = hint.toUpperCase();
-    hintContainer.classList.remove("hidden");
-    
-    // Close button functionality
-    document.getElementById("close-hint").addEventListener("click", () => {
+  const unusedLetters = secretWord.split("").filter(l => !currentGuess.includes(l));
+  const hint = unusedLetters[Math.floor(Math.random() * unusedLetters.length)] || secretWord[0];
+  
+  // Show the hint popup
+  const hintContainer = document.getElementById("hint-container");
+  const hintLetter = document.getElementById("hint-letter");
+  
+  hintLetter.textContent = hint.toUpperCase();
+  hintContainer.classList.remove("hidden");
+  
+  // Close button functionality
+  document.getElementById("close-hint").addEventListener("click", () => {
+    hintContainer.classList.add("hidden");
+  });
+  
+  // Also close when clicking outside
+  hintContainer.addEventListener("click", (e) => {
+    if (e.target === hintContainer) {
       hintContainer.classList.add("hidden");
-    });
-    
-    // Also close when clicking outside
-    hintContainer.addEventListener("click", (e) => {
-      if (e.target === hintContainer) {
-        hintContainer.classList.add("hidden");
-      }
-    });
-  }
+    }
+  });
+}
 
 // Show daily completion banner
 function showDailyCompleteBanner() {
@@ -393,8 +504,10 @@ function disableGameInput() {
 // End game and update stats
 function endGame() {
   stats.gamesPlayed++;
+  stats.currentStreak = currentGuess === secretWord ? stats.currentStreak + 1 : 0;
   saveStats();
   updateStatsDisplay();
+  updatePointsDisplay();
 }
 
 // Reset all statistics
@@ -404,9 +517,11 @@ function resetStats() {
     stats.gamesWon = 0;
     stats.currentStreak = 0;
     stats.maxStreak = 0;
+    stats.points = 0;
     saveStats();
     updateStatsDisplay();
-    alert("Statistics have been reset!");
+    updatePointsDisplay();
+    showNotification("Statistics have been reset!");
   }
 }
 
@@ -416,12 +531,77 @@ function updateStatsDisplay() {
     "games-played": stats.gamesPlayed,
     "games-won": stats.gamesWon,
     "current-streak": stats.currentStreak,
-    "max-streak": stats.maxStreak
+    "max-streak": stats.maxStreak,
+    "mobile-games-played": stats.gamesPlayed,
+    "mobile-games-won": stats.gamesWon,
+    "mobile-streak": stats.currentStreak,
+    "mobile-max-streak": stats.maxStreak
   };
   
   Object.entries(elements).forEach(([id, value]) => {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
+  });
+}
+
+// Update points display
+function updatePointsDisplay() {
+  document.getElementById('user-points').textContent = stats.points;
+  document.getElementById('mobile-user-points').textContent = stats.points;
+  
+  // Update redeem button states
+  document.getElementById('redeem-tries').disabled = stats.points < 10;
+  document.getElementById('redeem-streak').disabled = stats.points < 20;
+  document.getElementById('mobile-redeem-tries').disabled = stats.points < 10;
+  document.getElementById('mobile-redeem-streak').disabled = stats.points < 20;
+}
+
+// Redeem points for benefits
+function redeemPoints(cost, type) {
+  if (stats.points < cost) {
+    showNotification(`Not enough points! You need ${cost} points.`);
+    document.getElementById('redeem-options').classList.add('hidden');
+    document.getElementById('game-over-banner').classList.add('hidden');
+    return false;
+  }
+
+  if (confirm(`Are you sure you want to spend ${cost} points to ${type === 'tries' ? 'get extra tries?' : 'save your streak?'}`)) {
+    stats.points -= cost;
+    
+    if (type === 'tries') {
+      currentRow = 0; // Reset current row for extra tries
+      showNotification("You've been granted extra tries!");
+      // Reset the board for new tries
+      resetBoardForExtraTries();
+    } else {
+      stats.currentStreak++; // Save streak
+      showNotification("Your streak has been saved!");
+    }
+    
+    document.getElementById('game-over-banner').classList.add('hidden');
+    saveStats();
+    updatePointsDisplay();
+    updateStatsDisplay();
+    return true;
+  }
+  return false;
+}
+
+// Add new function to reset board for extra tries
+function resetBoardForExtraTries() {
+  // Clear current guess
+  currentGuess = "";
+  
+  // Reset the current row to 0
+  currentRow = 0;
+  
+  // Clear any existing game over banners
+  document.getElementById('game-over-banner').classList.add('hidden');
+  document.getElementById('redeem-options').classList.add('hidden');
+  
+  // Enable input
+  document.querySelectorAll(".key").forEach(btn => {
+    btn.disabled = false;
   });
 }
 

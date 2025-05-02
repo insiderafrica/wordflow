@@ -7,6 +7,7 @@
     --present-color: #b59f3b;
     --absent-color: #3a3a3c;
     --border-color: #3a3a3c;
+    --redeem-color: #6e4b8b;
   }
   
   .colorblind {
@@ -19,6 +20,7 @@
     margin: 0;
     background-color: var(--bg-color);
     color: var(--text-color);
+    touch-action: manipulation;
   }
   
   #container {
@@ -36,25 +38,25 @@
   }
 
   /* Left Panel - User Tools */
-#left-panel {
+  #left-panel {
     background: #1a1a1b;
     padding: 20px;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
-    gap: 25px; /* Space between sections */
+    gap: 25px;
   }
   
   #controls {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* Exact 6px spacing between buttons */
+    gap: 6px;
   }
   
   #controls button {
     width: 100%;
     margin: 0;
-    padding: 8px 12px; /* Compact padding */
+    padding: 8px 12px;
     text-align: left;
     background: #2a2a2b;
     border: none;
@@ -87,6 +89,41 @@
     margin: 8px 0;
     font-size: 0.9rem;
     color: #d7dadc;
+  }
+  
+  /* Points system */
+  #points-system {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+  }
+  
+  #points-system h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+  }
+  
+  .redeem-btn {
+    width: 100%;
+    margin: 6px 0;
+    padding: 8px 12px;
+    background: var(--redeem-color);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .redeem-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .redeem-btn:not(:disabled):hover {
+    opacity: 0.9;
   }
   
   #game-panel {
@@ -122,11 +159,16 @@
     text-align: center;
     line-height: var(--cell-size);
     text-transform: uppercase;
+    user-select: none;
   }
   
   .cell.correct { background-color: var(--correct-color); }
   .cell.present { background-color: var(--present-color); }
   .cell.absent { background-color: var(--absent-color); }
+  /* Add to style.css */
+  .cell.correct, .cell.present, .cell.absent {
+  color: white !important; /* Ensure text remains visible */
+  }
   
   #keyboard {
     display: flex;
@@ -154,13 +196,15 @@
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.1s;
+    user-select: none;
+    touch-action: manipulation;
   }
   
   .key.special { min-width: 65px; font-size: 0.8rem; }
   .key:active { transform: scale(0.92); }
   .key.correct { background: var(--correct-color); color: white; }
   .key.present { background: var(--present-color); color: white; }
-  .key.absent { background: var(--absent-color); opacity: 0.4; }
+  .key.absent { background: var(--absent-color); opacity: 0.4; pointer-events: none; }
   
   button {
     padding: 12px 18px;
@@ -260,7 +304,7 @@
     display: none !important;
   }
   
-  #daily-complete-banner {
+  #daily-complete-banner, #game-over-banner {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -276,14 +320,36 @@
     border: 2px solid var(--correct-color);
   }
   
-  #daily-complete-banner h2 {
+  #game-over-banner {
+    border-color: var(--absent-color);
+  }
+  
+  #daily-complete-banner h2, #game-over-banner h2 {
     color: var(--correct-color);
     margin-top: 0;
   }
   
-  #daily-complete-banner p {
+  #game-over-banner h2 {
+    color: var(--present-color);
+  }
+  
+  #daily-complete-banner p, #game-over-banner p {
     font-size: 1.2rem;
     margin: 15px 0;
+  }
+  
+  #correct-word {
+    font-weight: bold;
+    color: var(--present-color);
+  }
+  
+  #redeem-options {
+    margin-top: 20px;
+  }
+  
+  #redeem-options button {
+    margin: 5px;
+    width: calc(100% - 10px);
   }
   
   button:disabled, .key:disabled {
@@ -291,35 +357,9 @@
     pointer-events: none;
     opacity: 0.5;
   }
-  
-  @media (max-width: 1000px) {
-    #container {
-      grid-template-columns: 1fr;
-    }
-  
-    #left-panel, #right-panel {
-      width: auto;
-    }
-  
-    #board {
-      grid-template-columns: repeat(5, min(18vw, 70px));
-      gap: 5px;
-    }
-  
-    .key {
-      min-width: 9vw;
-      padding: 10px 0;
-      font-size: 1rem;
-    }
-  
-    button {
-      font-size: 0.9rem;
-      padding: 10px 12px;
-    }
-  }
 
   /* Hint Popup Styles */
-#hint-container {
+  #hint-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -363,7 +403,7 @@
   }
 
   /* Add to style.css */
-#controls button:after {
+  #controls button:after {
     content: '';
     font-size: 0.7rem;
     color: #b59f3b;
@@ -388,7 +428,7 @@
   } 
 
   /* Shortcuts section */
-.shortcuts-info {
+  .shortcuts-info {
     margin: 25px 0;
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
@@ -415,4 +455,141 @@
     color: var(--correct-color);
     text-align: center;
     margin-top: 10px;
+  }
+
+  /* Mobile Menu Styles */
+  #mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+    background: #1a1a1b;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  #mobile-menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100vh;
+    background: #1a1a1b;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+  }
+
+  #mobile-menu.show {
+    left: 0;
+  }
+
+  #close-menu-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .menu-section {
+    margin-bottom: 25px;
+    border-bottom: 1px solid #3a3a3c;
+    padding-bottom: 15px;
+  }
+
+  .menu-section h3 {
+    color: var(--correct-color);
+    margin-top: 0;
+  }
+
+  .mobile-stats p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+    color: #d7dadc;
+  }
+
+  #mobile-yesterdays-word {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--correct-color);
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  #mobile-points-system h3 {
+    font-size: 1rem;
+    margin: 10px 0 5px 0;
+  }
+
+  #mobile-points-system .redeem-btn {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+
+  /* Hide desktop panels on mobile */
+  @media (max-width: 768px) {
+    #left-panel, #right-panel {
+      display: none;
+    }
+    #mobile-menu-btn {
+      display: block;
+    }
+    #container {
+      grid-template-columns: 1fr;
+      padding: 10px;
+    }
+    #game-panel {
+      padding-top: 50px;
+    }
+    
+    #board {
+      grid-template-columns: repeat(5, min(18vw, 70px));
+      gap: 5px;
+    }
+    
+    .key {
+      min-width: 8vw;
+      height: 50px;
+      font-size: 0.9rem;
+    }
+    
+    .key.special {
+      min-width: 12vw;
+    }
+    
+    #daily-complete-banner, #game-over-banner {
+      width: 90%;
+      padding: 20px;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .key {
+      min-width: 7vw;
+      height: 45px;
+      font-size: 0.8rem;
+    }
+    
+    .key.special {
+      min-width: 11vw;
+    }
+    
+    #board {
+      grid-template-columns: repeat(5, min(20vw, 60px));
+    }
   }
